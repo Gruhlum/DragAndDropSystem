@@ -1,0 +1,19 @@
+{
+  "name": "com.hextecgames.draganddropsystem",
+  "version": "1.0.0",
+  "displayName": "DragAndDropSystem",
+  "description": "My Package",
+  "unity": "2022.1",
+  "dependencies": {},
+  "author": {
+    "name": "HexTecGames"
+  },
+  "hideInEditor": "false",
+  "samples": [
+    {
+      "displayName": "Example 1",
+      "description": "Example 1 description",
+      "path": "Samples/Example 1"
+    }
+  ]
+}
