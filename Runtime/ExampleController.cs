@@ -5,18 +5,21 @@ using UnityEngine;
 
 namespace HexTecGames.DragAndDropSystem
 {
-    public class ExampleController : MonoBehaviour
+    public class ExampleController : AdvancedBehaviour
     {
         [SerializeField] private DragAndDropController dragAndDropController = default;
 
-        private List<Card> cards = new List<Card>();
+        private List<ExampleCard> cards = new List<ExampleCard>();
         
         private void Start()
         {
             for (int i = 0; i < 5; i++)
             {
-                Card card = new Card();
-                dragAndDropController.SpawnDisplay(card);
+                ExampleCard card = new ExampleCard();
+                DragAndDropDisplay display = dragAndDropController.SpawnDisplay(card);
+                Vector3 targetPosition = Random.insideUnitCircle * 10;
+                targetPosition.z = display.transform.position.z;
+                display.SetPosition(targetPosition);
                 cards.Add(card);
             }
         }

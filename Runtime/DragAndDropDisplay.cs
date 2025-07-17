@@ -1,12 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using HexTecGames.Basics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace HexTecGames.DragAndDropSystem
 {
-    public class DragAndDropDisplay : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
+    public class DragAndDropDisplay : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler, ISpawnable<DragAndDropDisplay>
     {
         [SerializeField] private Image img = default;
         [SerializeField] private float moveSpeed = 20f;
@@ -50,13 +52,25 @@ namespace HexTecGames.DragAndDropSystem
             {
                 return isHoverTarget;
             }
-            protected  set
+            protected set
             {
                 isHoverTarget = value;
             }
         }
         private bool isHoverTarget;
 
+        public bool IsMoveable
+        {
+            get
+            {
+                return isMoveable;
+            }
+            set
+            {
+                isMoveable = value;
+            }
+        }
+        private bool isMoveable = true;
 
         public DragAndDropSlot Slot
         {
@@ -79,9 +93,11 @@ namespace HexTecGames.DragAndDropSystem
         private Vector2 mouseOffset;
         private Vector3 targetPosition;
 
-        private DragAndDropSlot currentHoverSlot;
+        private DragAndDropSlotBase currentHoverSlot;
 
 
+        public event Action<DragAndDropDisplay> OnClicked;
+        public event Action<DragAndDropDisplay> OnDeactivated;
 
         protected virtual void Reset()
         {
@@ -105,13 +121,17 @@ namespace HexTecGames.DragAndDropSystem
             if (IsDragging)
             {
                 var hoverSlot = dragAndDropController.DetectSlot();
+
                 if (currentHoverSlot != hoverSlot)
                 {
-                    if (hoverSlot == null)
+                    if (currentHoverSlot != null)
                     {
                         currentHoverSlot.EndHovering();
                     }
-                    else hoverSlot.StartHovering(this);
+                    if (hoverSlot != null)
+                    {
+                        hoverSlot.StartHovering(this);
+                    }
 
                     currentHoverSlot = hoverSlot;
                 }
@@ -125,11 +145,7 @@ namespace HexTecGames.DragAndDropSystem
             }
             else
             {
-                if (currentHoverSlot != null)
-                {
-                    currentHoverSlot.EndHovering();
-                    currentHoverSlot = null;
-                }
+                ClearHoverSlot();
             }
 
             if (Vector3.Distance(transform.position, targetPosition) > 0.001f)
@@ -138,57 +154,35 @@ namespace HexTecGames.DragAndDropSystem
             }
         }
 
-        public void Setup(IDragAndDropItem item, DragAndDropController dragAndDropController)
+        private void ClearHoverSlot()
+        {
+            if (currentHoverSlot != null)
+            {
+                currentHoverSlot.EndHovering();
+                currentHoverSlot = null;
+            }
+        }
+
+        public virtual void Setup(IDragAndDropItem item, DragAndDropController dragAndDropController)
         {
             this.Item = item;
             this.dragAndDropController = dragAndDropController;
         }
 
-        public void RemoveSlot()
+        public void SetPosition(Vector3 position)
         {
-            Slot = null;
-            //StartItemDrag();
+            transform.position = position;
+            startingPosition = position;
+            targetPosition = position;
         }
 
-        private void StartItemDrag()
+        private void StartDragging()
         {
             transform.SetAsLastSibling();
             startingPosition = transform.position;
             IsDragging = true;
-            dragAndDropController.SelectedItem = this;
             mouseOffset = transform.position - Camera.main.GetMousePosition();
         }
-
-        public void SetSlot(DragAndDropSlot slot)
-        {
-            targetPosition = slot.transform.position;
-            startingPosition = Camera.main.GetMousePosition();
-            this.Slot = slot;
-        }
-
-        public void OnPointerDown(PointerEventData eventData)
-        {
-            if (Slot != null && Item is IStackable stackable)
-            {
-                if (stackable.CurrentStacks > 1)
-                {
-                    var item = stackable.Split();
-                    var display = dragAndDropController.SpawnDisplay(item);
-                    display.transform.position = transform.position;
-                    display.startingPosition = startingPosition;
-                    display.StartItemDrag();
-                    return;
-                }
-            }
-            StartItemDrag();
-            if (Slot != null)
-            {
-                Slot.RemoveItem();
-                startingPosition = Slot.transform.position;
-                Slot = null;
-            }
-        }
-
         public void StopDragging()
         {
             IsDragging = false;
@@ -202,15 +196,48 @@ namespace HexTecGames.DragAndDropSystem
             }
             else
             {
-                TryTransferItem(currentHoverSlot);
+                if (TryTransferItem(currentHoverSlot))
+                {
+                    
+                }
+                else
+                {
+                    if (returnToLastPosition)
+                    {
+                        TryReturnToLastPosition();
+                    }
+                }
             }
         }
-
-        private bool TryTransferItem(DragAndDropSlot slot)
+        public void SetSlot(DragAndDropSlot slot, bool instant = false)
         {
-            if (slot.IsValidItem(this.Item))
+            if (this.Slot != null)
             {
-                slot.SetItem(this);
+                this.Slot.RemoveDisplay();
+            }
+
+            targetPosition = slot.transform.position;
+            if (instant)
+            {
+                transform.position = targetPosition;
+            }
+            this.Slot = slot;
+        }
+
+        private void CreateSplit(IStackable stackable)
+        {
+            var item = stackable.Split();
+            var display = dragAndDropController.SpawnDisplay(item);
+            display.transform.position = transform.position;
+            display.startingPosition = startingPosition;
+            display.StartDragging();
+        }
+
+        private bool TryTransferItem(DragAndDropSlotBase slot)
+        {
+            if (slot.CanRecieveDisplay(this))
+            {
+                slot.TransferDisplay(this);
                 return true;
             }
             return false;
@@ -225,13 +252,37 @@ namespace HexTecGames.DragAndDropSystem
             }
             else
             {
-                if (!TryTransferItem(lastSlot))
-                {
-                    targetPosition = startingPosition;
-                }
+                targetPosition = slot.transform.position;
             }
         }
-
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (!IsMoveable)
+            {
+                OnClicked?.Invoke(this);
+                return;
+            }
+            if (Slot == null)
+            {
+                StartDragging();
+                return;
+            }
+            if (!Slot.CanSend)
+            {
+                return;
+            }
+            if (Item is IStackable stackable)
+            {
+                if (stackable.CurrentStacks > 1)
+                {
+                    CreateSplit(stackable);
+                    return;
+                }
+            }
+            //Slot.RemoveDisplay();
+            //Slot = null;
+            StartDragging();
+        }
         public void OnPointerEnter(PointerEventData eventData)
         {
             IsHoverTarget = true;
@@ -240,6 +291,23 @@ namespace HexTecGames.DragAndDropSystem
         public void OnPointerExit(PointerEventData eventData)
         {
             IsHoverTarget = false;
+        }
+
+        public virtual void Deactivate()
+        {
+            Slot = null;
+            ClearHoverSlot();
+            gameObject.SetActive(false);
+            OnDeactivated?.Invoke(this);
+        }
+
+        public virtual bool IsValidSlot(DragAndDropSlot dragAndDropSlot)
+        {
+            if (Item == null)
+            {
+                return false;
+            }
+            return Item.IsValidSlot(dragAndDropSlot);
         }
     }
 }

@@ -8,20 +8,25 @@ using UnityEngine.UI;
 
 namespace HexTecGames.DragAndDropSystem
 {
-    public class DragAndDropSlot : MonoBehaviour
+    public class DragAndDropSlot : DragAndDropSlotBase
     {
-        [SerializeField] private Image img = default;
-        [Space]
-        [SerializeField] private DragAndDropController slotSystemController = default;
         [Space]
         [SerializeField] private Color fullColor = Color.white;
-        [SerializeField] private Color normalColor = Color.white;
-        [SerializeField] private Color validColor = Color.green;
-        [SerializeField] private Color invalidColor = Color.red;
 
-        private int backgroundLayer = 0;
-        private int contentLayer = 1;
-        private int hoverLayer = 2;
+        [Space]
+        [SerializeField] private bool canSend = true;
+
+        public bool CanSend
+        {
+            get
+            {
+                return canSend;
+            }
+            set
+            {
+                canSend = value;
+            }
+        }
 
         public DragAndDropDisplay Display
         {
@@ -32,41 +37,35 @@ namespace HexTecGames.DragAndDropSystem
             private set
             {
                 display = value;
+                OnDisplayChanged?.Invoke(display);
             }
         }
         private DragAndDropDisplay display;
 
-        ColorStack colorStack = new ColorStack(ColorStack.Mode.Single);
+
+        public event Action<DragAndDropDisplay> OnDisplayChanged;
 
 
-        private void Awake()
+        private void AddDisplayEvents(DragAndDropDisplay display)
         {
-            colorStack.OnActiveItemChanged += ColorStack_OnActiveItemChanged;
-            colorStack.Add(normalColor, backgroundLayer);
+            display.OnDeactivated += Display_OnDeactivated;
+        }
+        private void RemoveDisplayEvents(DragAndDropDisplay display)
+        {
+            display.OnDeactivated -= Display_OnDeactivated;
+        }
+        private void Display_OnDeactivated(DragAndDropDisplay display)
+        {
+            RemoveDisplay();
         }
 
-        private void ColorStack_OnActiveItemChanged(Color color)
+        public void RemoveDisplay()
         {
-            img.color = color;
-        }
-
-        public void StartHovering(DragAndDropDisplay item)
-        {
-            slotSystemController.CurrentSlot = this;
-            DetermineBackgroundColor(item);
-        }
-        public void EndHovering()
-        {
-            slotSystemController.CurrentSlot = null;
-            colorStack.ClearLayer(hoverLayer);
-        }
-
-        public void RemoveItem()
-        {
+            RemoveDisplayEvents(Display);
             Display = null;
             colorStack.ClearLayer(contentLayer);
         }
-        public void SetItem(DragAndDropDisplay display)
+        public override void TransferDisplay(DragAndDropDisplay display, bool instant = false)
         {
             if (display.Item is IStackable stackable && CanMerge(stackable))
             {
@@ -77,7 +76,8 @@ namespace HexTecGames.DragAndDropSystem
             else
             {
                 Display = display;
-                display.SetSlot(this);
+                AddDisplayEvents(display);
+                display.SetSlot(this, instant);
             }
             colorStack.Add(fullColor, contentLayer);
         }
@@ -88,12 +88,6 @@ namespace HexTecGames.DragAndDropSystem
                 stackable.Merge(otherItem);
             }
         }
-        private void DetermineBackgroundColor(DragAndDropDisplay display)
-        {
-            colorStack.ClearLayer(hoverLayer);
-            colorStack.Add(IsValidItem(display.Item) ? validColor : invalidColor, hoverLayer);
-        }
-
         public bool CanMerge(IStackable otherItem)
         {
             if (Display == null)
@@ -106,10 +100,30 @@ namespace HexTecGames.DragAndDropSystem
             }
             return false;
         }
-
-        public bool IsValidItem(IDragAndDropItem item)
+        public override bool CanRecieveDisplay(DragAndDropDisplay display)
         {
-            return item.IsValidSlot(this);
+            if (!CanRecieve)
+            {
+                return false;
+            }
+
+            return display.IsValidSlot(this);
+        }
+        public T TryGetItem<T>() where T : IDragAndDropItem
+        {
+            if (Display == null)
+            {
+                return default;
+            }
+            if (Display.Item == null)
+            {
+                return default;
+            }
+            if (Display.Item is not T t)
+            {
+                return default;
+            }
+            return t;
         }
     }
 }

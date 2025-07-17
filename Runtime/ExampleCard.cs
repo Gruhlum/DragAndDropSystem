@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine;
 namespace HexTecGames.DragAndDropSystem
 {
     [System.Serializable]
-    public class Card : IStackable
+    public class ExampleCard : IStackable
     {
         public int MaxStacks
         {
@@ -35,7 +36,7 @@ namespace HexTecGames.DragAndDropSystem
 
         public bool IsStackable(IStackable otherItem)
         { 
-            if (otherItem is not Card otherCard)
+            if (otherItem is not ExampleCard otherCard)
             {
                 return false;
             }
@@ -65,7 +66,12 @@ namespace HexTecGames.DragAndDropSystem
         public IStackable Split()
         {
             CurrentStacks--;
-            return new Card();
+            return new ExampleCard();
+        }
+
+        public int CalculateSellValue()
+        {
+            throw new NotImplementedException();
         }
     }
 }

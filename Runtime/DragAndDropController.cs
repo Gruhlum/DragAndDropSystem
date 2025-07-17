@@ -6,45 +6,32 @@ using UnityEngine.UI;
 
 namespace HexTecGames.DragAndDropSystem
 {
-    public class DragAndDropController : MonoBehaviour
+    public class DragAndDropController : AdvancedBehaviour
     {
         [SerializeField] private GraphicRaycaster raycaster = default;
         [SerializeField] private Spawner<DragAndDropDisplay> displaySpawner = default;
 
-        public DragAndDropDisplay SelectedItem
-        {
-            get
-            {
-                return selectedItem;
-            }
-            set
-            {
-                selectedItem = value;
-            }
-        }
-        private DragAndDropDisplay selectedItem;
-
-        public DragAndDropSlot CurrentSlot
-        {
-            get
-            {
-                return currentSlot;
-            }
-            set
-            {
-                currentSlot = value;
-            }
-        }
-        private DragAndDropSlot currentSlot;
+        //public DragAndDropDisplay SelectedItem
+        //{
+        //    get
+        //    {
+        //        return selectedItem;
+        //    }
+        //    set
+        //    {
+        //        selectedItem = value;
+        //    }
+        //}
+        //private DragAndDropDisplay selectedItem;
 
 
-        public DragAndDropSlot DetectSlot()
+        public DragAndDropSlotBase DetectSlot()
         {
             return DetectSlot(Input.mousePosition);
         }
-        public DragAndDropSlot DetectSlot(Vector2 position)
+        public DragAndDropSlotBase DetectSlot(Vector2 position)
         {
-            raycaster.DetectUIObject(out DragAndDropSlot slot, position);
+            raycaster.DetectUIObject(out DragAndDropSlotBase slot, position);
             return slot;
         }
 

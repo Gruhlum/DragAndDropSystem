@@ -56,6 +56,8 @@ MonoBehaviour:
   normalColor: {r: 1, g: 1, b: 1, a: 0.78431374}
   validColor: {r: 0, g: 1, b: 0, a: 0.78431374}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.78431374}
+  canRecieve: 1
+  canSend: 1
 --- !u!222 &102470712116554085
 CanvasRenderer:
   m_ObjectHideFlags: 0
