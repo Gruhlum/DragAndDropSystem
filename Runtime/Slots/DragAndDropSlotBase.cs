@@ -8,7 +8,7 @@ namespace HexTecGames.DragAndDropSystem
 {
     public abstract class DragAndDropSlotBase : AdvancedBehaviour
     {
-        [SerializeField] protected DragAndDropController dragAndDropController = default;
+        //[SerializeField] protected DragAndDropController dragAndDropController = default;
         [Space]
         [SerializeField] private Image img = default;
         [Space]
@@ -18,6 +18,12 @@ namespace HexTecGames.DragAndDropSystem
 
         [Space]
         [SerializeField] private bool canRecieve = true;
+
+        [Header("Navigation")]
+        [SerializeField] private DragAndDropSlotBase left = default;
+        [SerializeField] private DragAndDropSlotBase right = default;
+        [SerializeField] private DragAndDropSlotBase top = default;
+        [SerializeField] private DragAndDropSlotBase down = default;
 
         public virtual bool CanRecieve
         {

@@ -11,19 +11,6 @@ namespace HexTecGames.DragAndDropSystem
         [SerializeField] private GraphicRaycaster raycaster = default;
         [SerializeField] private Spawner<DragAndDropDisplay> displaySpawner = default;
 
-        //public DragAndDropDisplay SelectedItem
-        //{
-        //    get
-        //    {
-        //        return selectedItem;
-        //    }
-        //    set
-        //    {
-        //        selectedItem = value;
-        //    }
-        //}
-        //private DragAndDropDisplay selectedItem;
-
 
         public DragAndDropSlotBase DetectSlot()
         {
@@ -35,6 +22,18 @@ namespace HexTecGames.DragAndDropSystem
             return slot;
         }
 
+
+        public DragAndDropDisplay FindDisplay(IDragAndDropItem item)
+        {
+            foreach (var display in displaySpawner)
+            {
+                if (display.Item == item)
+                {
+                    return display;
+                }
+            }
+            return null;
+        }
         public DragAndDropDisplay SpawnDisplay(IDragAndDropItem item)
         {
             var display = displaySpawner.Spawn();

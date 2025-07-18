@@ -70,7 +70,7 @@ namespace HexTecGames.DragAndDropSystem
             if (display.Item is IStackable stackable && CanMerge(stackable))
             {
                 MergeItem(stackable);
-                display.gameObject.SetActive(false);
+                display.Deactivate();
                 colorStack.ClearLayer(hoverLayer);
             }
             else

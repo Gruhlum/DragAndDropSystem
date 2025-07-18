@@ -198,7 +198,7 @@ namespace HexTecGames.DragAndDropSystem
             {
                 if (TryTransferItem(currentHoverSlot))
                 {
-                    
+
                 }
                 else
                 {
@@ -245,8 +245,8 @@ namespace HexTecGames.DragAndDropSystem
 
         private void TryReturnToLastPosition()
         {
-            var lastSlot = dragAndDropController.DetectSlot(Camera.main.WorldToScreenPoint(startingPosition));
-            if (lastSlot == null)
+            //var lastSlot = dragAndDropController.DetectSlot(Camera.main.WorldToScreenPoint(startingPosition));
+            if (slot == null)
             {
                 targetPosition = startingPosition;
             }
@@ -308,6 +308,15 @@ namespace HexTecGames.DragAndDropSystem
                 return false;
             }
             return Item.IsValidSlot(dragAndDropSlot);
+        }
+
+        public override string ToString()
+        {
+            if (Item == null)
+            {
+                return $"{base.ToString()} [Empty]";
+            }
+            else return $"{base.ToString()} {Item}";
         }
     }
 }
