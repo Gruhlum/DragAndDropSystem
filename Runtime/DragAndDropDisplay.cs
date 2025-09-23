@@ -97,6 +97,7 @@ namespace HexTecGames.DragAndDropSystem
 
 
         public event Action<DragAndDropDisplay> OnClicked;
+        //public event Action<DragAndDropDisplay> OnChanged;
         public event Action<DragAndDropDisplay> OnDeactivated;
 
         protected virtual void Reset()

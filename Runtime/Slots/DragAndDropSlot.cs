@@ -79,6 +79,8 @@ namespace HexTecGames.DragAndDropSystem
                 AddDisplayEvents(display);
                 display.SetSlot(this, instant);
             }
+
+            OnDisplayChanged?.Invoke(this.Display);
             colorStack.Add(fullColor, contentLayer);
         }
         public void MergeItem(IStackable otherItem)
