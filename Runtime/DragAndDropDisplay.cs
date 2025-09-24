@@ -107,9 +107,9 @@ namespace HexTecGames.DragAndDropSystem
         protected virtual void Awake()
         {
             targetPosition = transform.position;
-            Color color = Utility.GenerateRandomColor();
-            color.SetAlpha(0.8f);
-            img.color = color;
+            //Color color = Utility.GenerateRandomColor();
+            //color.SetAlpha(0.8f);
+            //img.color = color;
         }
 
         protected virtual void Update()

@@ -37,13 +37,17 @@ namespace HexTecGames.DragAndDropSystem
             private set
             {
                 display = value;
-                OnDisplayChanged?.Invoke(display);
+                DisplayChanged?.Invoke(display);
             }
         }
         private DragAndDropDisplay display;
 
 
-        public event Action<DragAndDropDisplay> OnDisplayChanged;
+        public delegate void DisplayEvent(DragAndDropDisplay display);
+
+        public event DisplayEvent DisplayChanged;
+        public event DisplayEvent DisplayRemoved;
+        public event DisplayEvent DisplayAdded;
 
 
         private void AddDisplayEvents(DragAndDropDisplay display)
@@ -59,11 +63,19 @@ namespace HexTecGames.DragAndDropSystem
             RemoveDisplay();
         }
 
+        public void RecieveDisplay(DragAndDropDisplay display, bool instant)
+        {
+            Display = display;
+            AddDisplayEvents(display);
+            display.SetSlot(this, instant);
+            DisplayAdded?.Invoke(display);
+        }
         public void RemoveDisplay()
         {
             RemoveDisplayEvents(Display);
-            Display = null;
             colorStack.ClearLayer(contentLayer);
+            DisplayRemoved?.Invoke(Display);
+            Display = null;
         }
         public override void TransferDisplay(DragAndDropDisplay display, bool instant = false)
         {
@@ -75,12 +87,10 @@ namespace HexTecGames.DragAndDropSystem
             }
             else
             {
-                Display = display;
-                AddDisplayEvents(display);
-                display.SetSlot(this, instant);
+                RecieveDisplay(display, instant);
             }
 
-            OnDisplayChanged?.Invoke(this.Display);
+            DisplayChanged?.Invoke(this.Display);
             colorStack.Add(fullColor, contentLayer);
         }
         public void MergeItem(IStackable otherItem)
